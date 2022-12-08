@@ -1,20 +1,36 @@
 (import-macros {: view : must : describe : it : rerequire} :test)
 (local enum (rerequire :enum))
 
+(describe "pack, unpack"
+  (it "unpacks"
+    (must match (1 2 3) (enum.unpack [1 2 3]))
+    (must match nil (enum.unpack []))))
+
 (describe "reduce"
   (it "handles seq"
     (must match
           [[1 :a] [2 :b] [3 :c]]
           (enum.reduce #(doto $1 (table.insert [$2 $3])) [] [:a :b :c]))
+    ;; with initial
     (let [sum (enum.reduce #(+ $1 $3))]
-      (must match 8 (sum 0 [5 2 1]))))
+      (must match 8 (sum 0 [5 2 1])))
+    ;; without initial
+    (must match 8 (enum.reduce #(+ $1 $3) [5 2 1])))
   (it "handles assoc"
     (must match
           [[1 :a] [2 :b] [3 :c]]
           (doto (enum.reduce #(doto $1 (table.insert [$3 $2])) [] {:a 1 :b 2 :c 3})
-            (table.sort (fn [[i _] [ii _]] (< i ii))))))
+            (table.sort (fn [[i _] [ii _]] (< i ii)))))
+    ;; with initial
+    (let [sum (enum.reduce #(+ $1 $3))]
+      (must match 8 (sum 0 {:a 1 :b 2 :c 5})))
+    ;; without initial
+    (must match 8 (enum.reduce #(+ $1 $3) {:a 1 :b 2 :c 5})))
   (it "handles stl-custom iter"
-    (must match :abc (enum.reduce #(.. $1 $2) "" #(string.gmatch "abc" "[%a]"))))
+    ;; with initial
+    (must match :abc (enum.reduce #(.. $1 $2) "" #(string.gmatch "abc" "[%a]")))
+    ;; without initial
+    (must match :abc (enum.reduce #(.. $1 $2) #(string.gmatch "abc" "[%a]"))))
   (it "handles custom stateless iterator"
     (fn iter []
       (fn gen [invar state]

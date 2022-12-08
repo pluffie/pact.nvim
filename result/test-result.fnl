@@ -62,8 +62,8 @@
 (describe "result-let"
   (it "handles all success"
     (let [val (m.result-let [x (values 10)
-                      y (values 99)]
-                     (+ x y))]
+                             y (values 99)]
+                            (+ x y))]
       (must equal true (r.ok? val))
       (must equal (+ 10 99) (r.unwrap val)))
     (let [val (m.result-let [x (values 10 :ignored)
