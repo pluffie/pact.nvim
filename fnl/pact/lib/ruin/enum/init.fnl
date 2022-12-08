@@ -97,7 +97,9 @@
   "Reduce `enumerable` by `f` with `?initial` as initial accumulator value if given.
 
   If `?initial` is not given, the first value from `enumerable` is used. `nil`
-  is a valid initial value and distinct from not providing one.
+  is a valid initial value and distinct from not providing one. When enumerable is
+  a generator function, only the first value from the function is used as the default
+  initial value.
 
   `f' should accept the accumulator then any arguments as per the iterator.
 
@@ -119,17 +121,17 @@
   (reduce-impl f ?initial (M.pack (generator)))
   ;; as above but inital is retrieved from ipairs/pairs
   (where [f t] (and (function? f) (seq? t)))
-  (let [[iter a n] (ipairs t)
+  (let [(iter a n) (ipairs t)
         (nn initial) (iter a n)]
     (reduce-impl f initial (M.pack iter a nn)))
   (where [f t] (and (function? f) (assoc? t)))
-  (let [[iter a n] (pairs t)
+  (let [(iter a n) (pairs t)
         (nn initial) (iter a n)]
     (reduce-impl f initial (M.pack iter a nn)))
   (where [f generator] (and (function? f) (function? generator)))
-  (let [[iter a n] (generator)
-        (nn initial) (iter a n)]
-    (reduce-impl f initial (M.pack iter a nn))))
+  (let [(iter a n) (generator)
+        initial (iter a n)]
+    (reduce-impl f initial (M.pack iter a initial))))
 
 ;; Map
 
