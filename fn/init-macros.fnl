@@ -467,7 +467,7 @@ can create new scopes with `(do)`.
                                    msg# (string.format (.. "Multi-arity function %s had no matching head "
                                                            "or default defined.\nCalled with: [%s]\nHeads:\n%s")
                                                        ,(tostring name)
-                                                       (-> (fcollect  [i# 0 (select :# ...)]
+                                                       (-> (fcollect  [i# 1 (select :# ...)]
                                                              (view# (. [...] i#)))
                                                            (table.concat ", "))
                                                        (table.concat (. ,dispatch-lookup-sym :help) "\n"))]

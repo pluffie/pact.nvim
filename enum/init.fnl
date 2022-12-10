@@ -133,6 +133,67 @@
         initial (iter a n)]
     (reduce-impl f initial (M.pack iter a initial))))
 
+(fn* depth-walk-impl
+  ;; TODO seq? restricted?
+  ;; termnator, no more down
+  (where [f node ?list ?acc history next-id] (or (= nil ?list) (= nil (. ?list 1))))
+  (f ?acc node history)
+
+  (where [f node list ?acc history next-id])
+  ;; fresh history so we dont sully other branches
+  (let [branch-history (M.concat$ [] history [node])]
+    (M.reduce #(depth-walk-impl f $3 (next-id $3 branch-history) $1 branch-history next-id)
+              (f ?acc node history) list)))
+
+(fn* breadth-walk-impl
+  ;; TODO seq? restricted?
+  (where [f ?list ?acc history next-id] (or (= nil ?list) (= nil (. ?list 1))))
+  ?acc
+
+  (where [f list ?acc history next-id])
+  (let [next-list (M.flat-map #(next-id $2) list)
+        history (M.append$ history [])]
+    (breadth-walk-impl f
+                       next-list
+                       (M.reduce #(let [acc (f $1 $3 history)]
+                                    (doto (M.last history)
+                                          (M.append$ $3))
+                                    acc) ?acc list)
+                       history
+                       next-id)))
+
+(fn* M.depth-walk
+  "Visit every node in a graph, depth first.
+
+  Accepts a function `f`, a head `node`, optionally an `acc` value and a
+  `next-identity` function.
+
+  If an acc value is provided (may be nil) then `f` is called with `acc node
+  history` otherwise its called with `node history` where history is a list of
+  visited nodes in the current branch.
+
+  `next-identity` is called with the current `node` and `history` and should
+  return the a list of the next nodes to visit, an empty list or nil.
+
+  By default no provisions are taken to avoid loops or optimisations for
+  visited nodes, these should be filtered in `next-identity`."
+  (where [f node next-identity] (and (function? f) (table? node) (function? next-identity)))
+  (depth-walk-impl #(f $2 $3) node (next-identity node []) nil [] next-identity)
+  (where [f node ?acc next-identity] (and (function? f) (table? node) (function? next-identity)))
+  (depth-walk-impl f node (next-identity node []) ?acc [] next-identity))
+
+(fn* M.breadth-walk
+  "Visit every node in a graph, breadth first. See `depth-walk' for details on arguments.
+
+  `history` currently underconstruction...
+
+  `history` in `breadth-walk` is a seq of seqs where each seq is another depth level."
+  ;; TODO better history without blanks
+  (where [f node next-identity] (and (function? f) (table? node) (function? next-identity)))
+  (breadth-walk-impl #(f $2 $3) [node] nil [] next-identity)
+  (where [f node ?acc next-identity] (and (function? f) (table? node) (function? next-identity)))
+  (breadth-walk-impl f [node] ?acc [] next-identity))
+
 ;; Map
 
 (fn* M.map
