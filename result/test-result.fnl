@@ -134,3 +134,27 @@
     (must match :now-error (r.unwrap ne))
     (must equal true (r.ok? no))
     (must match :now-ok (r.unwrap no))))
+
+(describe "join"
+  (it "joins two ok with no value, returns ok"
+    (must match [:ok nil] (r.join (r.ok) (r.ok))))
+
+  (it "joins two ok with values, returns ok"
+    (must match [:ok 1 2 nil] (r.join (r.ok 1) (r.ok 2))))
+
+  (it "joins two ok with values, returns ok"
+    (must match [:ok 1 [11 nil] 2 22 nil]
+          (r.join (r.ok 1 [11]) (r.ok 2 22))))
+
+  (it "joins two ok with some value, returns ok"
+    (must match [:ok :all-good] (r.join (r.ok) (r.ok :all-good)))
+    (must match [:ok :all-good] (r.join (r.ok :all-good) (r.ok))))
+
+  (it "keeps joining values"
+    (must match [:ok 1 2 3 4 nil] (r.join (r.join
+                                            (r.join (r.ok 1)
+                                                    (r.ok 2))
+                                            (r.ok 3))
+                                          (r.ok 4))))
+  (it "joins two err with values, returns err"
+    (must match [:err 1 2] (r.join (r.err 1) (r.err 2)))))
