@@ -1,6 +1,29 @@
 (import-macros {: view : must : describe : it : rerequire} :test)
 (local enum (rerequire :enum))
 
+; (fn visit [node history]
+;   (print :at node.id
+;          :history (.. (enum.reduce #(.. $1 "->" $3.id) "" history))))
+
+; (fn xyz [x]
+;   (enum.reduce #(.. $1 ", " $3.id) "" x))
+
+; (let [a {:id :a}
+;       b {:id :b}
+;       c {:id :c}
+;       d {:id :d}
+;       e {:id :e}]
+;   (enum.each #(setmetatable $2 {:__fennelview (fn [t] t.id)})
+;              [a b c d e])
+;   (set a.edges [b])
+;   (set b.edges [c e])
+;   (set c.edges [d e])
+;   (print :depth)
+;   (enum.depth-walk visit a #$1.edges)
+;   (print :breadth)
+;   (enum.breadth-walk #(view $1 $2) a #$1.edges))
+
+
 (describe "pack, unpack"
   (it "unpacks"
     (must match (1 2 3) (enum.unpack [1 2 3]))
@@ -422,3 +445,11 @@
     (must match [true false] (enum.pluck {:a true :b false :c 1} [:a :b])))
   (it "works with tables"
     (must match [true false] (enum.pluck [true true false true] [1 3]))))
+
+(describe "merge"
+  (it "merges new keys"
+    (must match {:a 10 :b 20} (enum.merge$ {:a 10} {:b 20})))
+  (it "replaces old keys"
+    (must match {:a 20} (enum.merge$ {:a 10} {:a 20})))
+  (it "conflict resolves old keys"
+    (must match {:a 30} (enum.merge$ {:a 10} {:a 20} #(+ $2 $3)))))

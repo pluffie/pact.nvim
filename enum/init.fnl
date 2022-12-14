@@ -369,6 +369,13 @@
   (where [t ks] (and (table? t) (seq? ks)))
   (M.map #(. t $2) ks))
 
+(fn* M.dot
+  "Get value of `k` from `t`."
+  (where [k])
+  #(M.dot k $1)
+  (where [k t] (table? t))
+  (. t k))
+
 ;; Seq-only alterations
 
 (fn negable-seq-index [seq i ctx]
@@ -496,9 +503,23 @@
 
 ;; General table alterations
 
+(fn* M.merge$
+  "For every key-value pair in b, copy it to a. Optionally accepts f to resolve
+  conflicts, called with the key name, `a` value and `b` value, otherwise
+  replaces."
+  (where [a b] (and (table? a) (table? b)))
+  (M.merge$ a b #$3)
+  (where [a b f] (and (table? a) (table? b) (function? f)))
+  (M.reduce #(if (not (= nil (. a $2)))
+               (M.set$ $1 $2 (f $2 (. a $2) (. b $2)))
+               (M.set$ $1 $2 $3))
+            a b))
+
 (fn* M.set$
-  "Set `t.k` to `v`, return `t`. This differs from Fennels `set`/`tset` by
-  returning the table `t`, it may be used in pipelines."
+  "Set `t.k` to `v`, return `t`.
+
+  This differs from Fennels `set`/`tset` by returning the table `t` and it may
+  be used in pipelines."
   (where [t k ?v] (table? t))
   (doto t (tset k ?v))
   (where [t] (table? t))
